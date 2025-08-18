@@ -1,14 +1,10 @@
-import dotenv from "dotenv"
+
 import cookieParser from "cookie-parser"
 import cors from "cors"
-import express, { json, urlencoded } from "express"
+import express from "express"
 
 const app = express()
 
-
-dotenv.config({
-    path: './env'
-})
 
 app.use(cors())
 app.use(express.json())

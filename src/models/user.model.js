@@ -1,5 +1,67 @@
 import mongoose from "mongoose";
+import Jwt from "jsonwebtoken";
 
-const userSchema = new mongoose.Schema({},{timestamps:true})
+
+const userSchema = new mongoose.Schema({
+    userName: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+    },
+    password: {
+        type: String,
+        required: true,
+    },
+   fullName: {
+    type: String,
+        required: true,
+   },
+   DOB: {
+    type: Number,
+    required: true
+   },
+   refreshToken: {
+    type: String,
+    required: true
+   }
+
+},{timestamps:true})
+
+
+
+userSchema.methods.generateAccessToken = function(){
+return Jwt.sign(
+    {
+        _id: this._id,
+        email: this.email,
+        userName: this.userName
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+       expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+    }
+)
+};
+
+
+userSchema.methods.generateRefreshToken = function(){
+    return Jwt.sign(
+        {
+            _id: this._id
+        },
+        process.env.REFRESH_TOKEN_SECRET,
+        {
+            expiryIn: process.env.REFRESH_TOKEN_EXPIRY
+        }
+    )
+}
+
 
 export const User = mongoose.model("User",userSchema)
