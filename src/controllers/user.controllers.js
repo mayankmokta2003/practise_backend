@@ -2,7 +2,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { AsyncHandler } from "../utils/AsyncHandler.js";
 import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import cookieParser from "cookie-parser";
+
+
 
 
 const generateRefreshAccessTokens = async(userId)=>{
@@ -67,14 +68,16 @@ const registerUser = AsyncHandler(async(req,res)=>{
 
 
 const loginUser = AsyncHandler(async(req,res)=>{
-    const {email , password} = req.body
+    const {email , password} = await req.body
 
     if(!(email,password)){
         throw new ApiError(504, "fields are required")
     }
 
-    const user = await User.findById(email)
-    if(!email){
+    const user = await User.findOne({
+        $or: [{email}]
+    })
+    if(!user){
         throw new ApiError(404, "user does not exist")
     }
     const checkPassword = await user.isPasswordCorrect(password)
@@ -84,13 +87,13 @@ const loginUser = AsyncHandler(async(req,res)=>{
 
     const{accessToken , refreshToken} = generateRefreshAccessTokens(user._id)
 
-    options = {
+    const options = {
         httpOnly: true,
         secure: true
     }
     res.status(200)
-    .cookies("accessToken",accessToken,options)
-    .cookies("refreshToken",refreshToken,options)
+    .cookie("accessToken",accessToken,options)
+    .cookie("refreshToken",refreshToken,options)
     .json(
         new ApiResponse(
             200,
@@ -103,8 +106,33 @@ const loginUser = AsyncHandler(async(req,res)=>{
 })
 
 
+const logoutUser = AsyncHandler(async(req,res)=>{
+    const user = User.findByIdAndUpdate(req.user._id,
+        {
+            $set: {
+                refreshToken: undefined
+            }
+        },{
+            new: true
+        }
+        )
+        const options = {
+            httOnly: true,
+            secure: true
+        }
+        res.status(200)
+        .clearCookie("accessToken",options)
+        .clearCookie("refreshToken",options)
+        .json(
+            new ApiResponse(
+                200,{},"user logged out successfully"
+            )
+        )
+})
 
 
+
+const update
 
 
 export {registerUser,loginUser}

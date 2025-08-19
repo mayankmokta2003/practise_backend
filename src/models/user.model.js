@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import cookieParser from "cookie-parser";
 
 const userSchema = new mongoose.Schema(
   {
@@ -44,7 +45,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 userSchema.methods.isPasswordCorrect = async function (password) {
-  return await bcrypt.compare(this.password, password);
+  return await bcrypt.compare(password,this.password);
 };
 
 userSchema.methods.generateAccessToken = function () {
@@ -68,7 +69,7 @@ userSchema.methods.generateRefreshToken = function () {
     },
     process.env.REFRESH_TOKEN_SECRET,
     {
-      expiryIn: process.env.REFRESH_TOKEN_EXPIRY,
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
     }
   );
 };
